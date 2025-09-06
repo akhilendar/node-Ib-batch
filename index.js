@@ -5,6 +5,8 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
+const cookieParser = require("cookie-parser");
+app.use(cookieParser()) //middleware for parsing cookies
 
 let db = null
 
@@ -37,13 +39,17 @@ initialize() //calling the function to connect to MongoDB and start the server
 //Authorization Middleware
 
 const authorize = (req, res, next) => {
-     const {authorization} = req.headers;
-    if(!authorization){ //checking if authorization header is present
-        return res.status(401).json({ message: "Please provide authorization header" });
-    }
-    const token = authorization.split(" ")[1]; //getting the token from authorization header
+    //  const {authorization} = req.headers;
+    // if(!authorization){ //checking if authorization header is present
+    //     return res.status(401).json({ message: "Please provide authorization header" });
+    // }
+    // authrization.split(" ").[1]
+    const token = req.cookies.token //getting the token from cookies
+    console.log("Incoming cookies:", req.cookies); //logging the incoming cookies
+
+    // const hello = authorization.split(" ")[1]; //getting the token from authorization header
     if(!token){ //checking if token is present
-        return res.status(401).json({ message: "Please provide a token" });
+        return res.status(401).json({ message: "Please provide a Cookie" });
     }else{ 
         const validToken = jwt.verify(token, secretCode) //verifying the token with the secret code
         if(!validToken){ //checking if token is valid
@@ -149,6 +155,14 @@ app.post("/login", async (req, res) => {
                         const token = jwt.sign(PAYLOAD, secretCode, { expiresIn: "1h" }); 
                         //signing the token with the secret code and setting the expiration time to 1 hour
                         
+                        res.cookie("token", token, { //setting the token in the cookie
+                            httpOnly: true, //making the cookie httpOnly
+                            secure: false, //setting the secure attribute to false
+                            sameSite: "lax", //setting the sameSite attribute to strict
+                            maxAge: 3600000 //setting the expiration time to 1 hour
+                        })
+                        console.log("Set-Cookie header:", res.getHeaders()["set-cookie"]);
+
                         res.status(200).json({ 
                             message: "Login successful", 
                             jwToken: token //sending the token as response

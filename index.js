@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-app.use(express.json()) //middleware for take the incoming json data
+app.use(express.json()) //middleware to accept the incoming json data
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
